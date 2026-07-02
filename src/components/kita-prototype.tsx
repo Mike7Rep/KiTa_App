@@ -15,6 +15,7 @@ import {
   Send,
   ShieldCheck,
   Sun,
+  Thermometer,
   UserCheck,
   UserX,
   Users,
@@ -43,7 +44,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
-type AttendanceStatus = "expected" | "present" | "gone" | "absent"
+type AttendanceStatus = "expected" | "present" | "gone" | "absent" | "sick"
 type View = "today" | "children" | "reports" | "messages"
 
 type Child = {
@@ -57,6 +58,8 @@ type Child = {
   arrivalTime?: string
   departureTime?: string
   pickupBy?: string
+  sickReason?: string
+  sickTime?: string
   pickupOptions: string[]
   notes: string
   allergies: string
@@ -149,8 +152,10 @@ const initialChildren: Child[] = [
     group: "Sonnengruppe",
     initials: "EB",
     color: "#FF7A70",
-    status: "absent",
+    status: "sick",
     expectedArrival: "08:15",
+    sickReason: "Fieber",
+    sickTime: "07:58",
     pickupOptions: ["Nora Baumann", "Marc Baumann"],
     notes: "Heute krank gemeldet.",
     allergies: "Penicillin",
@@ -170,6 +175,8 @@ const navItems: { value: View; label: string; icon: React.ElementType }[] = [
   { value: "messages", label: "Chat", icon: MessageCircle },
 ]
 
+const sickReasons = ["Fieber", "Erkaeltung", "Bauchweh", "Arzttermin"]
+
 function timeNow() {
   return new Intl.DateTimeFormat("de-CH", {
     hour: "2-digit",
@@ -182,6 +189,7 @@ function statusLabel(status: AttendanceStatus) {
   if (status === "present") return "Eingecheckt"
   if (status === "gone") return "Abgeholt"
   if (status === "absent") return "Abgemeldet"
+  if (status === "sick") return "Krank"
   return "Erwartet"
 }
 
@@ -189,7 +197,18 @@ function statusClass(status: AttendanceStatus) {
   if (status === "present") return "status-present"
   if (status === "gone") return "status-gone"
   if (status === "absent") return "status-absent"
+  if (status === "sick") return "status-sick"
   return "status-expected"
+}
+
+function childTimeText(child: Child) {
+  if (child.status === "sick") {
+    return `${child.sickTime ?? child.expectedArrival} krank`
+  }
+  if (child.arrivalTime) {
+    return `${child.arrivalTime} Ankunft`
+  }
+  return `${child.expectedArrival} erwartet`
 }
 
 export function KitaPrototype() {
@@ -198,15 +217,18 @@ export function KitaPrototype() {
   const [selectedChildId, setSelectedChildId] = React.useState(children[0].id)
   const [profileOpen, setProfileOpen] = React.useState(false)
   const [pickupChildId, setPickupChildId] = React.useState<string | null>(null)
+  const [sickChildId, setSickChildId] = React.useState<string | null>(null)
   const [photoReadyId, setPhotoReadyId] = React.useState<string | null>(null)
 
   const selectedChild =
     children.find((child) => child.id === selectedChildId) ?? children[0]
   const pickupChild = children.find((child) => child.id === pickupChildId)
+  const sickChild = children.find((child) => child.id === sickChildId)
 
   const presentCount = children.filter((child) => child.status === "present").length
   const expectedCount = children.filter((child) => child.status === "expected").length
   const goneCount = children.filter((child) => child.status === "gone").length
+  const sickCount = children.filter((child) => child.status === "sick").length
 
   function checkInChild(childId: string) {
     setChildren((items) =>
@@ -218,6 +240,8 @@ export function KitaPrototype() {
               arrivalTime: child.arrivalTime ?? timeNow(),
               departureTime: undefined,
               pickupBy: undefined,
+              sickReason: undefined,
+              sickTime: undefined,
             }
           : child
       )
@@ -242,6 +266,26 @@ export function KitaPrototype() {
     setSelectedChildId(childId)
   }
 
+  function markSickChild(childId: string, sickReason: string) {
+    setChildren((items) =>
+      items.map((child) =>
+        child.id === childId
+          ? {
+              ...child,
+              status: "sick",
+              arrivalTime: undefined,
+              departureTime: undefined,
+              pickupBy: undefined,
+              sickReason,
+              sickTime: timeNow(),
+            }
+          : child
+      )
+    )
+    setSickChildId(null)
+    setSelectedChildId(childId)
+  }
+
   function openProfile(childId: string) {
     setSelectedChildId(childId)
     setProfileOpen(true)
@@ -249,12 +293,13 @@ export function KitaPrototype() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#eef7ff_0%,#f7f9fc_48%,#f5fbf8_100%)] p-4">
-      <div className="kita-device-shadow h-[min(1120px,calc(100vh-2rem))] min-h-[720px] w-full max-w-[1560px] overflow-hidden rounded-[36px] border border-white bg-white p-4 ring-1 ring-[var(--kita-fog)]">
+      <div className="kita-device-shadow relative h-[min(1120px,calc(100vh-2rem))] min-h-[720px] w-full max-w-[1560px] overflow-hidden rounded-[36px] border border-white bg-white p-4 ring-1 ring-[var(--kita-fog)]">
+        <WatermelonAnimations />
         <Tabs
           value={activeView}
           onValueChange={(value) => setActiveView(value as View)}
           orientation="vertical"
-          className="h-full min-h-0 gap-4"
+          className="relative h-full min-h-0 gap-4"
         >
           <TabsList className="h-full w-[86px] flex-col justify-start gap-3 rounded-[24px] bg-[var(--kita-cloud)] p-3 text-[var(--kita-ink)]">
             <div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-[var(--kita-sun)] text-[var(--kita-ink)]">
@@ -281,9 +326,11 @@ export function KitaPrototype() {
                 presentCount={presentCount}
                 expectedCount={expectedCount}
                 goneCount={goneCount}
+                sickCount={sickCount}
                 photoReadyId={photoReadyId}
                 onCheckIn={checkInChild}
                 onOpenPickup={setPickupChildId}
+                onOpenSick={setSickChildId}
                 onOpenProfile={openProfile}
                 onSelectChild={setSelectedChildId}
                 onPhotoReady={setPhotoReadyId}
@@ -325,6 +372,11 @@ export function KitaPrototype() {
         onClose={() => setPickupChildId(null)}
         onPick={checkOutChild}
       />
+      <SickDialog
+        child={sickChild}
+        onClose={() => setSickChildId(null)}
+        onMark={markSickChild}
+      />
     </main>
   )
 }
@@ -335,9 +387,11 @@ function TodayView({
   presentCount,
   expectedCount,
   goneCount,
+  sickCount,
   photoReadyId,
   onCheckIn,
   onOpenPickup,
+  onOpenSick,
   onOpenProfile,
   onSelectChild,
   onPhotoReady,
@@ -349,9 +403,11 @@ function TodayView({
   presentCount: number
   expectedCount: number
   goneCount: number
+  sickCount: number
   photoReadyId: string | null
   onCheckIn: (childId: string) => void
   onOpenPickup: (childId: string) => void
+  onOpenSick: (childId: string) => void
   onOpenProfile: (childId: string) => void
   onSelectChild: (childId: string) => void
   onPhotoReady: (childId: string) => void
@@ -361,7 +417,12 @@ function TodayView({
   return (
     <div className="grid h-full min-h-0 grid-cols-[1fr_340px] gap-4">
       <section className="flex min-h-0 flex-col gap-4">
-        <div className="overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,var(--kita-blue),var(--kita-petrol))] p-6 text-white shadow-sm">
+        <div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,var(--kita-blue),var(--kita-petrol))] p-6 text-white shadow-sm">
+          <div className="hero-watermelon-cluster" aria-hidden="true">
+            <span className="hero-watermelon" />
+            <span className="hero-watermelon hero-watermelon-small" />
+            <span className="hero-watermelon-seed" />
+          </div>
           <div className="flex items-start justify-between gap-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm font-medium opacity-90">
@@ -377,10 +438,11 @@ function TodayView({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <Metric label="Anwesend" value={presentCount} tone="mint" />
           <Metric label="Erwartet" value={expectedCount} tone="sun" />
           <Metric label="Abgeholt" value={goneCount} tone="lavender" />
+          <Metric label="Krank" value={sickCount} tone="coral" />
         </div>
 
         <ScrollArea className="min-h-0 flex-1 rounded-[24px] bg-[var(--kita-cloud)] p-3">
@@ -392,6 +454,7 @@ function TodayView({
                 selected={selectedChild.id === child.id}
                 onCheckIn={onCheckIn}
                 onOpenPickup={onOpenPickup}
+                onOpenSick={onOpenSick}
                 onOpenProfile={onOpenProfile}
                 onSelectChild={onSelectChild}
               />
@@ -405,6 +468,7 @@ function TodayView({
           child={selectedChild}
           photoReady={photoReadyId === selectedChild.id}
           onOpenProfile={onOpenProfile}
+          onOpenSick={onOpenSick}
           onPhotoReady={onPhotoReady}
           onShowMessages={onShowMessages}
           onShowReports={onShowReports}
@@ -432,12 +496,13 @@ function Metric({
 }: {
   label: string
   value: number
-  tone: "mint" | "sun" | "lavender"
+  tone: "mint" | "sun" | "lavender" | "coral"
 }) {
   const toneClass = {
     mint: "bg-[var(--kita-mint)]/22",
     sun: "bg-[var(--kita-sun)]/28",
     lavender: "bg-[var(--kita-lavender)]/20",
+    coral: "bg-[var(--kita-coral)]/18",
   }[tone]
 
   return (
@@ -453,6 +518,7 @@ function ChildRow({
   selected,
   onCheckIn,
   onOpenPickup,
+  onOpenSick,
   onOpenProfile,
   onSelectChild,
 }: {
@@ -460,9 +526,14 @@ function ChildRow({
   selected: boolean
   onCheckIn: (childId: string) => void
   onOpenPickup: (childId: string) => void
+  onOpenSick: (childId: string) => void
   onOpenProfile: (childId: string) => void
   onSelectChild: (childId: string) => void
 }) {
+  const canCheckIn =
+    child.status === "expected" || child.status === "absent" || child.status === "sick"
+  const canMarkSick = child.status !== "gone" && child.status !== "sick"
+
   return (
     <Card
       data-testid={`child-row-${child.id}`}
@@ -485,11 +556,13 @@ function ChildRow({
           <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
             <span>{child.group}</span>
             <span>·</span>
-            <span>
-              {child.arrivalTime
-                ? `${child.arrivalTime} Ankunft`
-                : `${child.expectedArrival} erwartet`}
-            </span>
+            <span>{childTimeText(child)}</span>
+            {child.sickReason ? (
+              <>
+                <span>·</span>
+                <span>{child.sickReason}</span>
+              </>
+            ) : null}
             {child.departureTime ? (
               <>
                 <span>·</span>
@@ -499,13 +572,23 @@ function ChildRow({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {child.status === "expected" || child.status === "absent" ? (
+          {canCheckIn ? (
             <Button
               data-testid={`check-in-${child.id}`}
               onClick={() => onCheckIn(child.id)}
             >
               <UserCheck data-icon="inline-start" />
               Ankunft
+            </Button>
+          ) : null}
+          {canMarkSick ? (
+            <Button
+              data-testid={`sick-${child.id}`}
+              variant="outline"
+              onClick={() => onOpenSick(child.id)}
+            >
+              <Thermometer data-icon="inline-start" />
+              Krank
             </Button>
           ) : null}
           {child.status === "present" ? (
@@ -537,6 +620,7 @@ function SelectedChildCard({
   child,
   photoReady,
   onOpenProfile,
+  onOpenSick,
   onPhotoReady,
   onShowMessages,
   onShowReports,
@@ -544,10 +628,13 @@ function SelectedChildCard({
   child: Child
   photoReady: boolean
   onOpenProfile: (childId: string) => void
+  onOpenSick: (childId: string) => void
   onPhotoReady: (childId: string) => void
   onShowMessages: () => void
   onShowReports: () => void
 }) {
+  const sickInfo = child.status === "sick" ? child.sickReason ?? "Krank" : undefined
+
   return (
     <Card className="min-h-0 flex-1 rounded-[24px] border-0 py-5 ring-1 ring-[var(--kita-fog)]">
       <CardHeader>
@@ -564,8 +651,12 @@ function SelectedChildCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
-          <InfoTile icon={Clock} label="Ankunft" value={child.arrivalTime ?? child.expectedArrival} />
-          <InfoTile icon={UserCheck} label="Abholung" value={child.pickupBy ?? "-"} />
+          <InfoTile icon={Clock} label="Ankunft" value={childTimeText(child)} />
+          <InfoTile
+            icon={sickInfo ? Thermometer : UserCheck}
+            label={sickInfo ? "Krank" : "Abholung"}
+            value={sickInfo ?? child.pickupBy ?? "-"}
+          />
         </div>
 
         <div className="rounded-2xl bg-[var(--kita-cloud)] p-4">
@@ -589,6 +680,16 @@ function SelectedChildCard({
             <Send data-icon="inline-start" />
             WhatsApp
           </Button>
+          {child.status !== "gone" ? (
+            <Button
+              data-testid={`sick-selected-${child.id}`}
+              variant={child.status === "sick" ? "secondary" : "outline"}
+              onClick={() => onOpenSick(child.id)}
+            >
+              <Thermometer data-icon="inline-start" />
+              Krank
+            </Button>
+          ) : null}
           <Button
             variant={photoReady ? "secondary" : "outline"}
             onClick={() => onPhotoReady(child.id)}
@@ -649,9 +750,10 @@ function ChildrenView({
                 </CardAction>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-3 gap-2 text-sm">
                   <MiniField label="Allergie" value={child.allergies} />
                   <MiniField label="Monat" value={`${child.monthDays} Tage`} />
+                  <MiniField label="Status" value={child.sickReason ?? statusLabel(child.status)} />
                 </div>
                 <Button
                   variant="outline"
@@ -851,6 +953,59 @@ function PickupDialog({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function SickDialog({
+  child,
+  onClose,
+  onMark,
+}: {
+  child?: Child
+  onClose: () => void
+  onMark: (childId: string, sickReason: string) => void
+}) {
+  return (
+    <Dialog open={Boolean(child)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{child ? `${child.name} krankmelden` : "Krankmelden"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Krankmeldung mit Grund erfassen
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-2">
+          {child
+            ? sickReasons.map((reason) => (
+                <Button
+                  key={reason}
+                  data-testid={`sick-reason-${child.id}-${reason.toLowerCase()}`}
+                  variant="outline"
+                  onClick={() => onMark(child.id, reason)}
+                >
+                  <Thermometer data-icon="inline-start" />
+                  {reason}
+                </Button>
+              ))
+            : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function WatermelonAnimations() {
+  return (
+    <div className="watermelon-layer" aria-hidden="true">
+      <span className="watermelon-slice wm-1" />
+      <span className="watermelon-slice wm-2" />
+      <span className="watermelon-slice wm-3" />
+      <span className="watermelon-slice wm-4" />
+      <span className="watermelon-seed seed-1" />
+      <span className="watermelon-seed seed-2" />
+      <span className="watermelon-seed seed-3" />
+      <span className="watermelon-seed seed-4" />
+    </div>
   )
 }
 
