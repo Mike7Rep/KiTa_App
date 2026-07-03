@@ -109,7 +109,7 @@ const slides: PitchSlide[] = [
     kicker: "Tests werden besser, wenn man nicht zu stark führt",
     icon: ClipboardCheck,
     accent: "var(--kita-coral)",
-    body: <LearningGrid cards={validationCards} highlight="Große Aufgaben zeigen ehrlicher, ob die App wirklich verstanden wird." imageSrc="/pitch/paper-prototype.jpeg" imageAlt="Papier-Prototyp der KiTa App mit gezeichneten Listen und Karten" />,
+    body: <LearningGrid cards={validationCards} highlight="Große Aufgaben zeigen ehrlicher, ob die App wirklich verstanden wird." imageSrc="/pitch/paper-prototype-rotated.jpeg" imageAlt="Papier-Prototyp der KiTa App mit gezeichneten Listen und Karten" />,
   },
   {
     eyebrow: "Learning 3",
