@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kitaapp-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "realbim-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "/Users/mikerepolusk/Coding/SIREGO/realBim",
+        "dev",
+        "--port",
+        "3105"
+      ],
+      "port": 3105
+    }
+  ]
+}
