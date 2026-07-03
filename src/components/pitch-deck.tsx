@@ -19,34 +19,34 @@ type PitchSlide = {
 }
 
 const developmentImages = [
-  { src: "/pitch/early-dashboard.png", alt: "Frueher KiTa-Kompass Dashboard-Entwurf", label: "Erste Struktur" },
+  { src: "/pitch/early-dashboard.png", alt: "Früher KiTa-Kompass Dashboard-Entwurf", label: "Erste Struktur" },
   { src: "/pitch/color-concept.png", alt: "Farbkonzept der KiTa App", label: "Visuelle Sprache" },
   { src: "/pitch/current-app.png", alt: "Aktueller klickbarer KiTa App Prototyp", label: "Klickbarer Prototyp" },
 ]
 
 const learningCards = [
-  "AI half, sehr schnell klickbare Prototypen zu bauen.",
+  "KI half, sehr schnell klickbare Prototypen zu bauen.",
   "Designideen konnten direkt ausprobiert statt lange diskutiert werden.",
   "Der Stil wurde iterativ klarer: freundlich, vertrauensvoll und einfach zu bedienen.",
 ]
 
 const validationCards = [
-  "Usern eher grosse Aufgaben geben und nicht zur Loesung hinfuehren.",
+  "Usern eher große Aufgaben geben und nicht zur Lösung hinführen.",
   "Papier-Prototyping hat Nachteile bei Schriften, Klickzielen und echten Aktionen.",
-  "Papier dauert laenger als ein klickbarer Prototyp, wenn man mehrere Varianten testen will.",
+  "Papier dauert länger als ein klickbarer Prototyp, wenn man mehrere Varianten testen will.",
 ]
 
 const aiCards = [
   "Mit KI ist Konzept- und App-Entwicklung deutlich schneller und lustiger.",
-  "Man kann gemuetlich beim Bier gemeinsam prompten und die App Schritt fuer Schritt formen.",
-  "Mehr Spass und Kreativfaktor, ohne lange in Figma oder Papier herumzubasteln.",
+  "Man kann gemütlich beim Bier gemeinsam prompten und die App Schritt für Schritt formen.",
+  "Mehr Spaß und Kreativfaktor, ohne lange in Figma oder Papier herumzubasteln.",
 ]
 
 const slides: PitchSlide[] = [
   {
     eyebrow: "Pitch / KiTa App",
     title: "KiTa Prototyp",
-    kicker: "Praesentation der Entwicklung",
+    kicker: "Präsentation der Entwicklung",
     icon: Presentation,
     accent: "var(--kita-blue)",
     body: (
@@ -57,7 +57,7 @@ const slides: PitchSlide[] = [
               <Sparkles className="size-8" aria-hidden="true" />
             </div>
             <h1 className="max-w-3xl text-7xl font-semibold leading-[0.95]">KiTa App</h1>
-            <p className="mt-5 max-w-2xl text-3xl font-semibold text-white/82">Was ist die Loesung und wie hat sie sich weiterentwickelt?</p>
+            <p className="mt-5 max-w-2xl text-3xl font-semibold text-white/82">Was ist die Lösung und wie hat sie sich weiterentwickelt?</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {["Daria", "David", "Michael"].map((name) => (
@@ -76,7 +76,7 @@ const slides: PitchSlide[] = [
   {
     eyebrow: "Entwicklung",
     title: "Von Idee zu klickbarer App",
-    kicker: "Bilder der Loesung mit Entwicklungsschritten",
+    kicker: "Bilder der Lösung mit Entwicklungsschritten",
     icon: Images,
     accent: "var(--kita-mint)",
     body: (
@@ -98,18 +98,18 @@ const slides: PitchSlide[] = [
   {
     eyebrow: "Learning 1",
     title: "Gestalten mit Tempo",
-    kicker: "AI als schneller Weg zu ausprobierbaren Varianten",
+    kicker: "KI als schneller Weg zu ausprobierbaren Varianten",
     icon: WandSparkles,
     accent: "var(--kita-lavender)",
-    body: <LearningGrid cards={learningCards} highlight="Viele Ideen wurden sofort klickbar statt nur beschrieben." />,
+    body: <LearningGrid cards={learningCards} highlight="Viele Ideen wurden sofort klickbar statt nur beschrieben." imageSrc="/pitch/codex-working.png" imageAlt="Codex-Arbeitsoberfläche während der App-Entwicklung" />,
   },
   {
     eyebrow: "Learning 2",
     title: "Validierung",
-    kicker: "Tests werden besser, wenn man nicht zu stark fuehrt",
+    kicker: "Tests werden besser, wenn man nicht zu stark führt",
     icon: ClipboardCheck,
     accent: "var(--kita-coral)",
-    body: <LearningGrid cards={validationCards} highlight="Grosse Aufgaben zeigen ehrlicher, ob die App wirklich verstanden wird." />,
+    body: <LearningGrid cards={validationCards} highlight="Große Aufgaben zeigen ehrlicher, ob die App wirklich verstanden wird." imageSrc="/pitch/paper-prototype.jpeg" imageAlt="Papier-Prototyp der KiTa App mit gezeichneten Listen und Karten" />,
   },
   {
     eyebrow: "Learning 3",
@@ -117,11 +117,11 @@ const slides: PitchSlide[] = [
     kicker: "Schneller, lustiger und kreativer zusammen arbeiten",
     icon: Bot,
     accent: "var(--kita-sun)",
-    body: <LearningGrid cards={aiCards} highlight="Gemeinsam prompten fuehlt sich direkter an als lange an statischen Mockups zu feilen." />,
+    body: <LearningGrid cards={aiCards} highlight="Gemeinsam prompten fühlt sich direkter an als lange an statischen Mockups zu feilen." imageSrc="/pitch/ai-prompting-beer.png" imageAlt="Mehrere Personen prompten gemeinsam an Laptops, trinken Bier und lachen" imageClassName="object-cover" />,
   },
 ]
 
-function LearningGrid({ cards, highlight }: { cards: string[]; highlight: string }) {
+function LearningGrid({ cards, highlight, imageSrc, imageAlt, imageClassName = "object-contain" }: { cards: string[]; highlight: string; imageSrc: string; imageAlt: string; imageClassName?: string }) {
   return (
     <div className="grid h-full min-h-0 grid-cols-[0.82fr_1fr] gap-6">
       <section className="flex min-h-0 flex-col justify-between rounded-[30px] bg-white p-7 ring-1 ring-[var(--kita-fog)]">
@@ -129,7 +129,7 @@ function LearningGrid({ cards, highlight }: { cards: string[]; highlight: string
           <p className="text-3xl font-semibold leading-tight">{highlight}</p>
         </div>
         <div className="relative mt-6 min-h-0 flex-1 overflow-hidden rounded-[28px] bg-[var(--kita-cloud)]">
-          <Image src="/pitch/presentation-outline.png" alt="Originales Praesentationsboard als Ausgangspunkt" fill loading="eager" sizes="36vw" className="object-contain p-5 opacity-90" />
+          <Image src={imageSrc} alt={imageAlt} fill loading="eager" sizes="36vw" className={cn(imageClassName, "p-5")} />
         </div>
       </section>
       <section className="grid min-h-0 grid-rows-3 gap-4">
@@ -209,7 +209,7 @@ export function PitchDeck({ slide }: { slide: number }) {
               )
             })}
           </div>
-          <Link href={`/pitch/${next}`} className="flex size-12 items-center justify-center rounded-2xl bg-white text-[var(--kita-ink)] shadow-sm ring-1 ring-[var(--kita-fog)]" aria-label="Naechste Slide">
+          <Link href={`/pitch/${next}`} className="flex size-12 items-center justify-center rounded-2xl bg-white text-[var(--kita-ink)] shadow-sm ring-1 ring-[var(--kita-fog)]" aria-label="Nächste Slide">
             <ArrowRight aria-hidden="true" />
           </Link>
         </nav>
