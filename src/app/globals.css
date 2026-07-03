@@ -516,8 +516,76 @@
     color: var(--kita-ink);
     font-size: clamp(1.8rem, 4vw, 4rem);
     font-weight: 900;
-    letter-spacing: -0.04em;
+    letter-spacing: 0;
+  }
+
+  .watermelon-splash.is-playing {
     animation: splash-out 5s ease forwards;
+  }
+
+  .watermelon-splash.is-loading {
+    background:
+      radial-gradient(circle at 50% 34%, rgb(255 255 255 / 96%) 0 12%, transparent 34%),
+      radial-gradient(circle at 50% 48%, #e7fff4 0 34%, #6ee7b7 100%);
+  }
+
+  .watermelon-loading-content {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    text-align: center;
+  }
+
+  .watermelon-loading-mark {
+    position: relative;
+    width: clamp(88px, 13vw, 150px);
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 34% 32%, rgb(255 255 255 / 54%) 0 9%, transparent 24%),
+      repeating-radial-gradient(ellipse at center, transparent 0 16px, rgb(12 100 66 / 20%) 17px 24px),
+      linear-gradient(135deg, #26b36e, #0f7a45 62%, #064e3b);
+    box-shadow: 0 24px 70px rgb(6 78 59 / 28%);
+    overflow: hidden;
+    animation: watermelon-loading-pulse 1.5s ease-in-out infinite;
+  }
+
+  .watermelon-loading-mark span {
+    position: absolute;
+    inset: 24%;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 34% 42%, #263238 0 7%, transparent 8%),
+      radial-gradient(circle at 66% 42%, #263238 0 7%, transparent 8%),
+      #ff7a70;
+  }
+
+  .watermelon-loading-mark span::after {
+    position: absolute;
+    left: 50%;
+    bottom: 28%;
+    width: 38%;
+    height: 18%;
+    border-bottom: 5px solid #263238;
+    border-radius: 0 0 999px 999px;
+    content: "";
+    transform: translateX(-50%);
+  }
+
+  .watermelon-loading-title {
+    font-size: clamp(2rem, 5vw, 4.8rem);
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 8px 34px rgb(38 65 94 / 18%);
+  }
+
+  .watermelon-loading-copy {
+    margin-top: 8px;
+    color: rgb(38 65 94 / 72%);
+    font-size: clamp(0.95rem, 1.4vw, 1.25rem);
+    font-weight: 700;
   }
 
   .watermelon-3d {
@@ -728,6 +796,12 @@
     inset: 0;
     width: 100%;
     height: 100%;
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  .watermelon-splash.is-playing .watermelon-three-canvas {
+    opacity: 1;
   }
 
   .watermelon-splash p {
@@ -736,4 +810,9 @@
     margin-top: min(52vh, 430px);
     text-shadow: 0 8px 34px rgb(38 65 94 / 18%);
   }
+}
+
+@keyframes watermelon-loading-pulse {
+  0%, 100% { transform: scale(0.98); }
+  50% { transform: scale(1.04); }
 }

@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as THREE from "three"
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
+import { WatermelonLoadingContent } from "@/components/watermelon-loading"
 
 const makeRindTexture = () => {
   const canvas = document.createElement("canvas")
@@ -56,9 +57,12 @@ const easeOutBack = (x: number) => {
 
 export function WatermelonSplash({ onDone }: { onDone: () => void }) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null)
+  const [isReady, setIsReady] = React.useState(false)
   React.useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    let disposed = false
+    setIsReady(false)
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -150,8 +154,8 @@ export function WatermelonSplash({ onDone }: { onDone: () => void }) {
     group.add(smileGroup)
 
     let raf = 0
-    const start = performance.now()
-    const loadedTimer = window.setTimeout(onDone, 5000)
+    let start = 0
+    let loadedTimer: number | null = null
     const onResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight)
       camera.aspect = window.innerWidth / window.innerHeight
@@ -160,6 +164,7 @@ export function WatermelonSplash({ onDone }: { onDone: () => void }) {
     }
     window.addEventListener("resize", onResize)
     const animate = () => {
+      if (disposed) return
       const t = (performance.now() - start) / 1000
       const spin = easeOutCubic(Math.min(t / 2.6, 1))
       group.rotation.y = spin * Math.PI * 4
@@ -178,9 +183,20 @@ export function WatermelonSplash({ onDone }: { onDone: () => void }) {
       renderer.render(scene, camera)
       raf = requestAnimationFrame(animate)
     }
-    animate()
+    renderer.render(scene, camera)
+    raf = requestAnimationFrame(() => {
+      if (disposed) return
+      setIsReady(true)
+      raf = requestAnimationFrame(() => {
+        if (disposed) return
+        start = performance.now()
+        loadedTimer = window.setTimeout(onDone, 5000)
+        animate()
+      })
+    })
     return () => {
-      window.clearTimeout(loadedTimer)
+      disposed = true
+      if (loadedTimer) window.clearTimeout(loadedTimer)
       window.removeEventListener("resize", onResize)
       cancelAnimationFrame(raf)
       scene.traverse((obj) => {
@@ -197,5 +213,11 @@ export function WatermelonSplash({ onDone }: { onDone: () => void }) {
       renderer.dispose()
     }
   }, [onDone])
-  return <div className="watermelon-splash" aria-label="Three.js Wassermelonen-Blob Intro"><canvas ref={canvasRef} className="watermelon-three-canvas" /><p>Award Winning KiTa</p></div>
+  return (
+    <div className={isReady ? "watermelon-splash is-playing" : "watermelon-splash is-loading"} aria-label={isReady ? "Three.js Wassermelonen-Blob Intro" : "KiTa Intro wird geladen"}>
+      <canvas ref={canvasRef} className="watermelon-three-canvas" />
+      {!isReady ? <WatermelonLoadingContent /> : null}
+      {isReady ? <p>Award Winning KiTa</p> : null}
+    </div>
+  )
 }
