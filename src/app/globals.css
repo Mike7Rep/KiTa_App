@@ -133,11 +133,13 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-    min-width: 980px;
+    min-width: 0;
+    overflow: hidden;
   }
   html {
     @apply font-sans;
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    overflow: hidden;
   }
 }
 
@@ -370,11 +372,11 @@
 @layer components {
   .ipad-frame {
     position: relative;
-    width: min(1560px, calc(100vw - 1.5rem));
-    height: min(1120px, calc(100dvh - 1.5rem));
-    min-height: 560px;
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 0;
     padding: clamp(12px, 1.8vw, 28px);
-    border-radius: clamp(34px, 4vw, 52px);
+    border-radius: 0;
     background: linear-gradient(145deg, #1f2937, #0f172a 55%, #334155);
     box-shadow: 0 34px 110px rgb(15 23 42 / 38%), inset 0 0 0 2px rgb(255 255 255 / 10%);
   }
