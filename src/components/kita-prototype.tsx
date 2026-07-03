@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as THREE from "three"
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
 import { AlertCircle, CalendarDays, Camera, Check, ChevronRight, Clock, FileText, Home, MessageCircle, Phone, Send, ShieldCheck, Sun, Thermometer, UserCheck, UserX, Users } from "lucide-react"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -65,16 +66,16 @@ function useKitaSounds() {
 
 export function KitaPrototype() {
   const [children, setChildren] = React.useState(initialChildren), [activeView, setActiveView] = React.useState<View>("today"), [selectedChildId, setSelectedChildId] = React.useState(initialChildren[0].id)
-  const [profileOpen, setProfileOpen] = React.useState(false), [pickupChildId, setPickupChildId] = React.useState<string | null>(null), [photoReadyId, setPhotoReadyId] = React.useState<string | null>(null), [showSplash, setShowSplash] = React.useState(true), [lost, setLost] = React.useState(5), [sadRain, setSadRain] = React.useState(false), [signedIn, setSignedIn] = React.useState(true)
+  const [profileOpen, setProfileOpen] = React.useState(false), [pickupChildId, setPickupChildId] = React.useState<string | null>(null), [photoReadyId, setPhotoReadyId] = React.useState<string | null>(null), [showSplash, setShowSplash] = React.useState(true), [lost, setLost] = React.useState(5), [sadRain, setSadRain] = React.useState(false)
   const currentDateLabel = useCurrentDateLabel()
   const sounds = useKitaSounds(); const selectedChild = children.find((c) => c.id === selectedChildId) ?? children[0]; const pickupChild = children.find((c) => c.id === pickupChildId)
   const counts = { present: children.filter(c=>c.status==="present").length, expected: children.filter(c=>c.status==="expected").length, gone: children.filter(c=>c.status==="gone").length, sick: children.filter(c=>c.status==="sick").length }
   React.useEffect(() => { const timer = setTimeout(()=>{ setSadRain(true); sounds.sad(); setLost(v=>v+1); setTimeout(()=>setSadRain(false), 3200) }, 10000); return () => { clearTimeout(timer) } }, [sounds])
   const click = <T extends unknown[]>(fn: (...args: T) => void) => (...args: T) => { sounds.poing(); fn(...args) }
-  const checkInChild = (id: string) => { setChildren(items => items.map(c => c.id===id ? { ...c, status:"present", arrivalTime:c.arrivalTime ?? timeNow(), departureTime:undefined, pickupBy:undefined, sickReason:undefined, sickTime:undefined } : c)); setSelectedChildId(id) }
-  const checkOutChild = (id: string, pickupBy: string) => { setChildren(items => items.map(c => c.id===id ? { ...c, status:"gone", departureTime:timeNow(), pickupBy } : c)); setPickupChildId(null); setSelectedChildId(id) }
+  const checkInChild = (id: string) => { sounds.welcome(); setChildren(items => items.map(c => c.id===id ? { ...c, status:"present", arrivalTime:c.arrivalTime ?? timeNow(), departureTime:undefined, pickupBy:undefined, sickReason:undefined, sickTime:undefined } : c)); setSelectedChildId(id) }
+  const checkOutChild = (id: string, pickupBy: string) => { sounds.goodbye(); setChildren(items => items.map(c => c.id===id ? { ...c, status:"gone", departureTime:timeNow(), pickupBy } : c)); setPickupChildId(null); setSelectedChildId(id) }
   const markSickChild = (id: string, reason: string) => { setChildren(items => items.map(c => c.id===id ? { ...c, status:"sick", arrivalTime:undefined, departureTime:undefined, pickupBy:undefined, sickReason:reason, sickTime:timeNow() } : c)); setSelectedChildId(id) }
-  return <main className="flex min-h-screen items-center justify-center bg-neutral-300 p-5">{showSplash ? <WatermelonSplash onDone={()=>setShowSplash(false)} /> : null}{sadRain ? <SadSmileyRain /> : null}<div className="ipad-frame"><div className="ipad-camera"/><div className="ipad-screen"><WatermelonAnimations /><Tabs value={activeView} onValueChange={(v)=>click(setActiveView)(v as View)} orientation="vertical" className="relative h-full min-h-0 gap-4"><TabsList className="h-full w-[86px] flex-col justify-start gap-3 rounded-[24px] bg-[var(--kita-cloud)] p-3 text-[var(--kita-ink)]"><div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-[var(--kita-sun)] text-[var(--kita-ink)]"><Sun /></div>{navItems.map((item)=><TabsTrigger key={item.value} value={item.value} aria-label={item.label} className="h-16 w-full flex-col rounded-2xl px-2 py-2 text-xs data-active:bg-white data-active:text-primary data-active:shadow-sm"><item.icon data-icon="inline-start" />{item.label}</TabsTrigger>)}<Button className="mt-auto size-12 self-center rounded-2xl" size="icon" variant="outline" aria-label={signedIn ? "Abmelden" : "Anmelden"} title={signedIn ? "Abmelden" : "Anmelden"} onClick={()=>{sounds.poing(); signedIn ? sounds.goodbye() : sounds.welcome(); setSignedIn(!signedIn)}}>{signedIn ? <UserX aria-hidden="true" /> : <UserCheck aria-hidden="true" />}</Button></TabsList><div className="min-w-0 flex-1"><TabsContent value="today" className="h-full"><TodayView kids={children} selectedChild={selectedChild} counts={counts} lost={lost} currentDateLabel={currentDateLabel} photoReadyId={photoReadyId} onCheckIn={click(checkInChild)} onOpenPickup={click(setPickupChildId)} onMarkSick={click(markSickChild)} onOpenProfile={click((id)=>{setSelectedChildId(id); setProfileOpen(true)})} onSelectChild={click(setSelectedChildId)} onPhotoReady={click(setPhotoReadyId)} onShowMessages={click(()=>setActiveView("messages"))} onShowReports={click(()=>setActiveView("reports"))}/></TabsContent><TabsContent value="children" className="h-full"><ChildrenView kids={children} onOpenProfile={click((id)=>{setSelectedChildId(id); setProfileOpen(true)})} onSelectChild={click(setSelectedChildId)} /></TabsContent><TabsContent value="reports" className="h-full"><ReportsView kids={children}/></TabsContent><TabsContent value="messages" className="h-full"><MessagesView kids={children} photoReadyId={photoReadyId} onPhotoReady={click(setPhotoReadyId)} /></TabsContent></div></Tabs></div></div><ProfileDialog child={selectedChild} open={profileOpen} onOpenChange={setProfileOpen}/><PickupDialog child={pickupChild} onClose={()=>setPickupChildId(null)} onPick={click(checkOutChild)}/></main>
+  return <main className="flex min-h-screen items-center justify-center bg-neutral-300 p-5">{showSplash ? <WatermelonSplash onDone={()=>setShowSplash(false)} /> : null}{sadRain ? <SadSmileyRain /> : null}<div className="ipad-frame"><div className="ipad-camera"/><div className="ipad-screen"><WatermelonAnimations /><Tabs value={activeView} onValueChange={(v)=>click(setActiveView)(v as View)} orientation="vertical" className="relative h-full min-h-0 gap-4"><TabsList className="h-full w-[86px] flex-col justify-start gap-3 rounded-[24px] bg-[var(--kita-cloud)] p-3 text-[var(--kita-ink)]"><div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-[var(--kita-sun)] text-[var(--kita-ink)]"><Sun /></div>{navItems.map((item)=><TabsTrigger key={item.value} value={item.value} aria-label={item.label} className="h-16 w-full flex-col rounded-2xl px-2 py-2 text-xs data-active:bg-white data-active:text-primary data-active:shadow-sm"><item.icon data-icon="inline-start" />{item.label}</TabsTrigger>)}</TabsList><div className="min-w-0 flex-1"><TabsContent value="today" className="h-full"><TodayView kids={children} selectedChild={selectedChild} counts={counts} lost={lost} currentDateLabel={currentDateLabel} photoReadyId={photoReadyId} onCheckIn={click(checkInChild)} onOpenPickup={click(setPickupChildId)} onMarkSick={click(markSickChild)} onOpenProfile={click((id)=>{setSelectedChildId(id); setProfileOpen(true)})} onSelectChild={click(setSelectedChildId)} onPhotoReady={click(setPhotoReadyId)} onShowMessages={click(()=>setActiveView("messages"))} onShowReports={click(()=>setActiveView("reports"))}/></TabsContent><TabsContent value="children" className="h-full"><ChildrenView kids={children} onOpenProfile={click((id)=>{setSelectedChildId(id); setProfileOpen(true)})} onSelectChild={click(setSelectedChildId)} /></TabsContent><TabsContent value="reports" className="h-full"><ReportsView kids={children}/></TabsContent><TabsContent value="messages" className="h-full"><MessagesView kids={children} photoReadyId={photoReadyId} onPhotoReady={click(setPhotoReadyId)} /></TabsContent></div></Tabs></div></div><ProfileDialog child={selectedChild} open={profileOpen} onOpenChange={setProfileOpen}/><PickupDialog child={pickupChild} onClose={()=>setPickupChildId(null)} onPick={click(checkOutChild)}/></main>
 }
 
 function TodayView({ kids, selectedChild, counts, lost, currentDateLabel, photoReadyId, onCheckIn, onOpenPickup, onMarkSick, onOpenProfile, onSelectChild, onPhotoReady, onShowMessages, onShowReports }: { kids: Child[]; selectedChild: Child; counts: {present:number; expected:number; gone:number; sick:number}; lost:number; currentDateLabel:string; photoReadyId: string | null; onCheckIn:(id:string)=>void; onOpenPickup:(id:string)=>void; onMarkSick:(id:string,r:string)=>void; onOpenProfile:(id:string)=>void; onSelectChild:(id:string)=>void; onPhotoReady:(id:string)=>void; onShowMessages:()=>void; onShowReports:()=>void }) { return <div className="grid h-full min-h-0 grid-cols-[1fr_360px] gap-4"><section className="flex min-h-0 flex-col gap-4"><div className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,var(--kita-blue),var(--kita-petrol))] p-6 text-white shadow-sm"><div className="hero-watermelon-cluster" aria-hidden="true"><span className="hero-watermelon"/><span className="hero-watermelon hero-watermelon-small"/><span className="hero-watermelon-seed"/></div><div className="flex items-start justify-between gap-6"><div><h1 className="text-4xl font-semibold leading-tight">KiTa Heute</h1><div className="lost-goal">Ziel 2026: weniger als 10 verlorene Kinder -- Stand <b>{lost}/10</b></div></div><div className="relative z-10 flex flex-col items-end gap-3"><div className="flex items-center gap-2 rounded-2xl bg-white/16 px-4 py-2 text-sm font-semibold" aria-live="polite"><CalendarDays />{currentDateLabel}</div><div className="flex items-center gap-3 rounded-2xl bg-white/16 px-4 py-3"><ShieldCheck /><span className="text-3xl font-semibold">{counts.present}</span></div></div></div></div><div className="grid grid-cols-4 gap-3"><Metric label="Anwesend" value={counts.present} tone="mint"/><Metric label="Erwartet" value={counts.expected} tone="sun"/><Metric label="Abgeholt" value={counts.gone} tone="lavender"/><Metric label="Krank" value={counts.sick} tone="coral"/></div><ScrollArea className="min-h-0 flex-1 rounded-[24px] bg-[var(--kita-cloud)] p-3"><div className="flex flex-col gap-3 pr-2">{kids.map(child=><ChildRow key={child.id} child={child} selected={selectedChild.id===child.id} onCheckIn={onCheckIn} onOpenPickup={onOpenPickup} onOpenProfile={onOpenProfile} onSelectChild={onSelectChild}/>)}</div></ScrollArea></section><aside className="flex min-h-0 flex-col gap-4"><SelectedChildCard child={selectedChild} photoReady={photoReadyId===selectedChild.id} onOpenProfile={onOpenProfile} onMarkSick={onMarkSick} onPhotoReady={onPhotoReady} onShowMessages={onShowMessages} onShowReports={onShowReports}/><Card className="rounded-[24px] border-0 bg-[var(--kita-mint)]/20 ring-0"><CardContent className="flex items-center gap-4"><div className="flex size-14 items-center justify-center rounded-2xl bg-[var(--kita-mint)] text-white"><Check /></div><div><p className="text-base font-semibold">Sicher angekommen</p><p className="text-sm text-muted-foreground">{counts.present} Kinder</p></div></CardContent></Card></aside></div> }
@@ -89,6 +90,43 @@ function HeaderBar({title,value}:{title:string; value:string|number}) { return <
 function ProfileDialog({child,open,onOpenChange}:{child:Child; open:boolean; onOpenChange:(open:boolean)=>void}) { return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="sm:max-w-2xl"><DialogHeader><DialogTitle className="flex items-center gap-3 text-2xl"><ChildAvatar child={child}/>{child.name}</DialogTitle><DialogDescription className="sr-only">Profil, Besonderheiten, Allergien und Kontakte</DialogDescription></DialogHeader><div className="grid gap-4"><div className="grid grid-cols-2 gap-3"><MiniField label="Gruppe" value={child.group}/><MiniField label="Allergie" value={child.allergies}/></div><div className="rounded-2xl bg-[var(--kita-cloud)] p-4"><div className="mb-2 text-sm font-semibold">Besonderheiten</div><p className="text-sm leading-6 text-muted-foreground">{child.notes}</p></div><Separator/><div className="grid gap-2">{child.contacts.map(contact=><div key={contact.phone} className="grid grid-cols-[52px_1fr_auto] items-center gap-3 rounded-2xl bg-[var(--kita-cloud)] p-3"><img src={contact.photoUrl} alt="" className="size-12 rounded-2xl object-cover"/><div><div className="font-semibold">{contact.name}</div><div className="text-sm text-muted-foreground">{contact.role}{contact.canPickup ? " · darf abholen" : ""}</div></div><a className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-primary ring-1 ring-[var(--kita-fog)]" href={`tel:${contact.phone}`}><Phone />{contact.phone}</a></div>)}</div></div></DialogContent></Dialog> }
 function PickupDialog({child,onClose,onPick}:{child?:Child; onClose:()=>void; onPick:(id:string,pickupBy:string)=>void}) { return <Dialog open={Boolean(child)} onOpenChange={(open)=>!open&&onClose()}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>{child?`${child.name} abholen`:"Abholen"}</DialogTitle><DialogDescription className="sr-only">Abholung mit abholender Person erfassen</DialogDescription></DialogHeader><div className="flex flex-col gap-2">{child?.pickupOptions.map(person=><Button key={person} variant="outline" onClick={()=>onPick(child.id,person)}><UserCheck data-icon="inline-start"/>{person}</Button>)}</div></DialogContent></Dialog> }
 function WatermelonAnimations() { return <div className="watermelon-layer" aria-hidden="true"><span className="watermelon-slice wm-1"/><span className="watermelon-slice wm-2"/><span className="watermelon-slice wm-3"/><span className="watermelon-slice wm-4"/><span className="watermelon-seed seed-1"/><span className="watermelon-seed seed-2"/><span className="watermelon-seed seed-3"/><span className="watermelon-seed seed-4"/></div> }
+const makeRindTexture = () => {
+  const canvas = document.createElement("canvas")
+  canvas.width = 2048
+  canvas.height = 1024
+  const g = canvas.getContext("2d")!
+  const base = g.createLinearGradient(0, 0, 0, canvas.height)
+  base.addColorStop(0, "#14602f")
+  base.addColorStop(0.5, "#238747")
+  base.addColorStop(1, "#11552a")
+  g.fillStyle = base
+  g.fillRect(0, 0, canvas.width, canvas.height)
+  for (let i = 0; i < 2400; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`; g.beginPath(); g.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1 + Math.random() * 7, 0, Math.PI * 2); g.fill() }
+  const stripes = 14
+  g.strokeStyle = "rgb(5 54 29)"
+  g.lineCap = "round"
+  for (let s = 0; s < stripes; s++) {
+    const cx = (s + 0.5) * (canvas.width / stripes)
+    for (let k = 0; k < 26; k++) {
+      g.lineWidth = 30 + Math.random() * 40
+      g.globalAlpha = 0.3 + Math.random() * 0.28
+      g.beginPath()
+      g.moveTo(cx + (Math.random() - 0.5) * 44, -30)
+      for (let y = 0; y <= canvas.height + 60; y += 60) g.lineTo(cx + Math.sin(y * 0.012 + s * 2.1 + k * 0.7) * 26 + (Math.random() - 0.5) * 26, y)
+      g.stroke()
+    }
+  }
+  g.globalAlpha = 1
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.wrapS = THREE.RepeatWrapping
+  tex.anisotropy = 8
+  return tex
+}
+const smoothstep = (a: number, b: number, x: number) => { const k = Math.min(Math.max((x - a) / (b - a), 0), 1); return k * k * (3 - 2 * k) }
+const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3)
+const easeOutBack = (x: number) => { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
+
 function WatermelonSplash({ onDone }: { onDone: () => void }) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null)
   React.useEffect(() => {
@@ -98,69 +136,121 @@ function WatermelonSplash({ onDone }: { onDone: () => void }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 0.95
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100)
-    camera.position.set(0, 0.1, 7)
-    scene.add(new THREE.AmbientLight(0xffffff, 1.8))
-    const key = new THREE.DirectionalLight(0xffffff, 4.5)
-    key.position.set(3, 4, 5)
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    const envMap = pmrem.fromScene(new RoomEnvironment(), 0.06).texture
+    scene.environment = envMap
+    const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 100)
+    camera.position.set(0, 0.12, 7.6)
+    const fitCamera = () => { const vFov = (34 * Math.PI) / 180; const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect); camera.position.z = Math.max(7.2, 2.3 / Math.tan(Math.min(vFov, hFov) / 2)) }
+    fitCamera()
+    const key = new THREE.DirectionalLight(0xffffff, 1.6)
+    key.position.set(3.5, 4.5, 5)
     scene.add(key)
-    const rim = new THREE.PointLight(0x9cffc8, 110, 12)
-    rim.position.set(-4, 2, 4)
+    const rim = new THREE.PointLight(0xbfffe0, 40, 14)
+    rim.position.set(-4.5, 1.6, 3.5)
     scene.add(rim)
 
     const group = new THREE.Group()
     scene.add(group)
-    const rind = new THREE.MeshPhysicalMaterial({ color: 0x087f4f, roughness: 0.32, metalness: 0.02, clearcoat: 0.75, clearcoatRoughness: 0.18, sheen: 0.45, sheenColor: new THREE.Color(0x67e8a5) })
-    const darkStripe = new THREE.MeshPhysicalMaterial({ color: 0x075f3d, roughness: 0.38, clearcoat: 0.55 })
-    const flesh = new THREE.MeshPhysicalMaterial({ color: 0xff6378, roughness: 0.25, clearcoat: 0.35, transmission: 0.02 })
-    const seedMat = new THREE.MeshPhysicalMaterial({ color: 0x151515, roughness: 0.18, clearcoat: 0.85 })
-    const melon = new THREE.Mesh(new THREE.SphereGeometry(1.85, 96, 64), rind)
-    group.add(melon)
-    for (let i = 0; i < 9; i++) {
-      const stripe = new THREE.Mesh(new THREE.TorusGeometry(1.88, 0.018, 12, 160), darkStripe)
-      stripe.rotation.x = Math.PI / 2
-      stripe.rotation.z = (i / 9) * Math.PI
-      stripe.scale.set(1, 0.18 + (i % 3) * 0.035, 1)
-      group.add(stripe)
+    const rindTex = makeRindTexture()
+    const rind = new THREE.MeshPhysicalMaterial({ map: rindTex, roughness: 0.28, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.14, sheen: 0.25, sheenColor: new THREE.Color(0xa7f3c9), envMapIntensity: 0.45 })
+    const geo = new THREE.SphereGeometry(1.5, 150, 100)
+    const posAttr = geo.getAttribute("position") as THREE.BufferAttribute
+    const vertexCount = posAttr.count
+    const dirs = new Float32Array(vertexCount * 3)
+    for (let i = 0; i < vertexCount; i++) { dirs[i * 3] = posAttr.getX(i) / 1.5; dirs[i * 3 + 1] = posAttr.getY(i) / 1.5; dirs[i * 3 + 2] = posAttr.getZ(i) / 1.5 }
+    const deform = (t: number, amp: number) => {
+      for (let i = 0; i < vertexCount; i++) {
+        const nx = dirs[i * 3], ny = dirs[i * 3 + 1], nz = dirs[i * 3 + 2]
+        const w = Math.sin(nx * 3.2 + t * 1.3) * 0.5 + Math.sin(ny * 4.1 - t * 1.1) * 0.34 + Math.sin(nz * 2.6 + nx * 2.2 + t * 1.6) * 0.42 + Math.sin((nx + ny + nz) * 4.6 - t * 0.8) * 0.22
+        const r = 1.5 * (1 + w * amp)
+        posAttr.setXYZ(i, nx * r, ny * r, nz * r)
+      }
+      posAttr.needsUpdate = true
+      geo.computeVertexNormals()
     }
-    const cut = new THREE.Mesh(new THREE.CircleGeometry(1.1, 96), flesh)
-    cut.position.set(0, 0, 1.72)
-    group.add(cut)
-    ;[[-0.42,0.2], [0.34,0.25], [-0.1,-0.1], [0.52,-0.22], [-0.55,-0.35]].forEach(([x,y]) => {
-      const seed = new THREE.Mesh(new THREE.SphereGeometry(0.075, 24, 16), seedMat)
-      seed.position.set(x, y, 1.79)
-      seed.scale.set(0.72, 1.25, 0.24)
-      group.add(seed)
-    })
-    const eyeGeo = new THREE.SphereGeometry(0.09, 24, 16)
-    ;[[-0.38, 0.55], [0.38, 0.55]].forEach(([x,y]) => { const eye = new THREE.Mesh(eyeGeo, seedMat); eye.position.set(x, y, 1.84); eye.scale.set(1,1,0.32); group.add(eye) })
-    const smile = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.025, 12, 64, Math.PI), seedMat)
-    smile.position.set(0, 0.2, 1.86)
-    smile.rotation.z = Math.PI
-    smile.scale.y = 0.55
-    group.add(smile)
+    const melon = new THREE.Mesh(geo, rind)
+    group.add(melon)
 
-    let frame = 0
+    const faceMat = new THREE.MeshPhysicalMaterial({ color: 0x131313, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.08, transparent: true, opacity: 0 })
+    const cheekMat = new THREE.MeshPhysicalMaterial({ color: 0xff8fa0, roughness: 0.5, transparent: true, opacity: 0 })
+    const faceRadius = 1.66
+    const surfacePoint = (x: number, y: number) => new THREE.Vector3(x, y, Math.sqrt(Math.max(faceRadius * faceRadius - x * x - y * y, 0.3)))
+    const eyes: THREE.Mesh[] = []
+    ;[[-0.52, 0.46], [0.52, 0.46]].forEach(([x, y]) => {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.13, 32, 24), faceMat)
+      eye.position.copy(surfacePoint(x, y).setLength(faceRadius))
+      eye.lookAt(eye.position.clone().multiplyScalar(2))
+      eye.scale.set(0.9, 1.2, 0.45)
+      group.add(eye)
+      eyes.push(eye)
+    })
+    ;[[-0.86, -0.02], [0.86, -0.02]].forEach(([x, y]) => {
+      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 16), cheekMat)
+      cheek.position.copy(surfacePoint(x, y).setLength(faceRadius - 0.03))
+      cheek.lookAt(cheek.position.clone().multiplyScalar(2))
+      cheek.scale.set(1, 0.72, 0.3)
+      group.add(cheek)
+    })
+    const smileAnchor = new THREE.Vector3(0, -0.1, faceRadius - 0.04)
+    const smilePoints: THREE.Vector3[] = []
+    for (let i = 0; i <= 24; i++) {
+      const s = i / 24
+      const x = (s - 0.5) * 1.14
+      const y = -0.2 + Math.pow((s - 0.5) * 2, 2) * 0.36
+      smilePoints.push(surfacePoint(x, y).setLength(faceRadius + 0.015).sub(smileAnchor))
+    }
+    const smileGroup = new THREE.Group()
+    smileGroup.position.copy(smileAnchor)
+    const smileCurve = new THREE.CatmullRomCurve3(smilePoints)
+    smileGroup.add(new THREE.Mesh(new THREE.TubeGeometry(smileCurve, 48, 0.055, 16), faceMat))
+    ;[smilePoints[0], smilePoints[smilePoints.length - 1]].forEach((p) => {
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 12), faceMat)
+      cap.position.copy(p)
+      smileGroup.add(cap)
+    })
+    group.add(smileGroup)
+
     let raf = 0
     const start = performance.now()
-    const loadedTimer = window.setTimeout(onDone, 3000)
-    const onResize = () => { renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix() }
+    const loadedTimer = window.setTimeout(onDone, 5000)
+    const onResize = () => { renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; fitCamera(); camera.updateProjectionMatrix() }
     window.addEventListener("resize", onResize)
     const animate = () => {
       const t = (performance.now() - start) / 1000
-      group.rotation.y = t * 2.15
-      group.rotation.x = Math.sin(t * 2.2) * 0.12
-      group.position.y = Math.sin(t * 3) * 0.12
-      group.scale.setScalar(1 + Math.sin(t * 4) * 0.025)
+      const spin = easeOutCubic(Math.min(t / 2.6, 1))
+      group.rotation.y = spin * Math.PI * 4
+      group.rotation.x = Math.sin(t * 2) * 0.06 * (1 - spin * 0.5)
+      group.rotation.z = Math.sin(t * 1.7) * 0.05 * (1 - spin * 0.6)
+      group.position.y = Math.sin(t * 2.2) * 0.09 * (1 - spin * 0.5)
+      deform(t, 0.2 - 0.13 * smoothstep(1.6, 2.6, t))
+      const faceIn = smoothstep(2.35, 2.85, t)
+      faceMat.opacity = faceIn
+      cheekMat.opacity = faceIn * 0.85
+      const grin = easeOutBack(smoothstep(2.9, 3.7, t))
+      smileGroup.scale.set(0.45 + 0.55 * grin, 0.2 + 0.8 * grin, 0.6 + 0.4 * grin)
+      const blink = Math.max(0, 1 - Math.abs((t - 4.15) / 0.12))
+      eyes.forEach((eye) => { eye.scale.y = 1.2 * (1 - 0.88 * blink) })
+      group.scale.setScalar(1 + Math.sin(t * 3.1) * 0.02 + faceIn * 0.05)
       renderer.render(scene, camera)
-      frame += 1
       raf = requestAnimationFrame(animate)
     }
     animate()
-    return () => { window.clearTimeout(loadedTimer); window.removeEventListener("resize", onResize); cancelAnimationFrame(raf); renderer.dispose(); scene.traverse((obj) => { if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const mat = obj.material; Array.isArray(mat) ? mat.forEach((m)=>m.dispose()) : mat.dispose() } }); void frame }
+    return () => {
+      window.clearTimeout(loadedTimer)
+      window.removeEventListener("resize", onResize)
+      cancelAnimationFrame(raf)
+      scene.traverse((obj) => { if (obj instanceof THREE.Mesh) { obj.geometry.dispose(); const mat = obj.material; if (Array.isArray(mat)) mat.forEach((m) => m.dispose()); else mat.dispose() } })
+      rindTex.dispose()
+      envMap.dispose()
+      pmrem.dispose()
+      renderer.dispose()
+    }
   }, [onDone])
-  return <div className="watermelon-splash" aria-label="Award winning Three.js watermelon intro"><canvas ref={canvasRef} className="watermelon-three-canvas" /><p>Award Winning KiTa</p></div>
+  return <div className="watermelon-splash" aria-label="Three.js Wassermelonen-Blob Intro"><canvas ref={canvasRef} className="watermelon-three-canvas" /><p>Award Winning KiTa</p></div>
 }
 function SadSmileyRain() { return <div className="sad-smiley-rain" aria-hidden="true">{Array.from({length:38},(_,i)=>{ const angle = (i / 38) * Math.PI * 2; const distance = 18 + (i % 7) * 7; const style = { "--burst-rotate": `${(i % 2 ? 1 : -1) * (160 + i * 19)}deg`, "--burst-scale": `${.72 + (i % 5) * .12}`, "--burst-x": `${Math.cos(angle) * distance}vw`, "--burst-y": `${Math.sin(angle) * distance}vh`, animationDelay: `${(i % 9) * .025}s` } as React.CSSProperties; return <span key={i} className="sad-smiley" style={style}/> })}</div> }
 function ChildAvatar({child,size="md"}:{child:Child; size?:"md"|"lg"}) { return <Avatar className={cn(size==="lg"?"size-14":"size-12", "overflow-hidden rounded-2xl")}><AvatarImage src={child.photoUrl} alt={`${child.name} Profilbild`} className="rounded-2xl" /></Avatar> }

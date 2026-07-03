@@ -428,7 +428,7 @@
     font-size: clamp(1.8rem, 4vw, 4rem);
     font-weight: 900;
     letter-spacing: -0.04em;
-    animation: splash-out 3s ease forwards;
+    animation: splash-out 5s ease forwards;
   }
 
   .watermelon-3d {
@@ -576,7 +576,7 @@
 }
 
 @keyframes splash-out {
-  0%, 70% { opacity: 1; visibility: visible; }
+  0%, 86% { opacity: 1; visibility: visible; }
   100% { opacity: 0; visibility: hidden; }
 }
 
