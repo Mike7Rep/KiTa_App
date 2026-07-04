@@ -28,7 +28,6 @@ const WatermelonSplash = dynamic(() => import("@/components/watermelon-splash").
 const childColors = ["#66D6AE", "#FFD85A", "#4DA8F5", "#A78BFA", "#FF7A70", "#F6A6C8", "#8BD450", "#F59E0B"]
 const contactImgs = ["parent-lisa", "parent-jonas", "parent-mara", "parent-theo"]
 const emptyChildForm: NewChildForm = { name: "", group: "Sonnengruppe", expectedArrival: "08:00", allergies: "", notes: "", pickup: "" }
-const sickReasons = ["Fieber", "Erkältung", "Bauchweh", "Arzttermin"]
 const navItems: { value: MainView; label: string; icon: React.ElementType }[] = [
   { value: "today", label: "Heute", icon: Home },
   { value: "groups", label: "Gruppen", icon: Users },
@@ -42,7 +41,7 @@ const initialChildren: Child[] = [
   { id: "lina", name: "Lina Keller", group: "Regenbogengruppe", initials: "LK", color: "#FFD85A", photoUrl: "/profiles/lina.jpg", status: "expected", expectedArrival: "09:00", pickupOptions: ["Mara Keller", "Theo Keller"], notes: "Trägt links ein Hörgerät - beim Stuhlkreis bitte vorne sitzen lassen.", allergies: "Keine", contacts: [contact("Mara Keller", "Mutter", "+41 76 232 10 10", "parent-mara"), contact("Theo Keller", "Vater", "+41 77 909 18 18", "parent-theo")], monthDays: 13, yearDays: 88 },
   { id: "noah", name: "Noah Fischer", group: "Wolkengruppe", initials: "NF", color: "#4DA8F5", photoUrl: "/profiles/noah.jpg", status: "present", expectedArrival: "08:30", arrivalTime: "08:28", pickupOptions: ["Laura Fischer", "Nico Fischer"], notes: "Sprachförderung dienstags - braucht klare, kurze Sätze und Blickkontakt.", allergies: "Laktose", contacts: [contact("Laura Fischer", "Mutter", "+41 79 420 00 20", "parent-laura"), contact("Nico Fischer", "Vater", "+41 78 311 40 17", "parent-nico")], monthDays: 15, yearDays: 97 },
   { id: "mia", name: "Mia Schneider", group: "Sternengruppe", initials: "MS", color: "#A78BFA", photoUrl: "/profiles/mia.jpg", status: "gone", expectedArrival: "07:45", arrivalTime: "07:51", departureTime: "12:20", pickupBy: "Sarah Schneider", pickupOptions: ["Sarah Schneider", "David Schneider"], notes: "Sehr schüchtern bei Übergaben - das Winke-Ritual am Fenster hilft beim Abschied.", allergies: "Erdbeeren", contacts: [contact("Sarah Schneider", "Mutter", "+41 79 502 44 41", "parent-sarah"), contact("David Schneider", "Vater", "+41 78 901 12 12", "parent-david")], monthDays: 12, yearDays: 74 },
-  { id: "elia", name: "Elia Baumann", group: "Sonnengruppe", initials: "EB", color: "#FF7A70", photoUrl: "/profiles/elia.jpg", status: "sick", expectedArrival: "08:15", sickReason: "Fieber", sickTime: "07:58", pickupOptions: ["Nora Baumann", "Marc Baumann"], notes: "Asthma - Inhalator im Rucksack, Notfallplan im Gruppenordner.", allergies: "Penicillin", contacts: [contact("Nora Baumann", "Mutter", "+41 76 808 55 55", "parent-nora"), contact("Marc Baumann", "Vater", "+41 79 330 20 11", "parent-marc")], monthDays: 9, yearDays: 65 },
+  { id: "elia", name: "Elia Baumann", group: "Sonnengruppe", initials: "EB", color: "#FF7A70", photoUrl: "/profiles/elia.jpg", status: "sick", expectedArrival: "08:15", sickReason: "Krank", sickTime: "07:58", pickupOptions: ["Nora Baumann", "Marc Baumann"], notes: "Asthma - Inhalator im Rucksack, Notfallplan im Gruppenordner.", allergies: "Penicillin", contacts: [contact("Nora Baumann", "Mutter", "+41 76 808 55 55", "parent-nora"), contact("Marc Baumann", "Vater", "+41 79 330 20 11", "parent-marc")], monthDays: 9, yearDays: 65 },
   { id: "ava", name: "Ava Rossi", group: "Sonnengruppe", initials: "AR", color: "#F6A6C8", photoUrl: "/profiles/ava.jpg", status: "expected", expectedArrival: "08:30", pickupOptions: ["Elena Rossi"], notes: "Eltern geschieden - Abholung ausschliesslich durch die Mutter (gerichtliche Vereinbarung).", allergies: "Erdnuss", contacts: [contact("Elena Rossi", "Mutter", "+41 76 515 90 90", "parent-laura"), contact("Marco Rossi", "Vater", "+41 79 646 25 25", "parent-nico", false)], monthDays: 11, yearDays: 69 },
   { id: "leo", name: "Leo Brunner", group: "Wolkengruppe", initials: "LB", color: "#8BD450", photoUrl: "/profiles/leo.jpg", status: "present", expectedArrival: "08:00", arrivalTime: "07:58", pickupOptions: ["Julia Brunner", "Stefan Brunner"], notes: "Trägt eine Brille - beim Toben in der Turnhalle bitte das Sportband anziehen.", allergies: "Keine", contacts: [contact("Julia Brunner", "Mutter", "+41 78 737 14 14", "parent-sarah"), contact("Stefan Brunner", "Vater", "+41 79 828 36 36", "parent-david")], monthDays: 14, yearDays: 92 },
   { id: "sofia", name: "Sofia Steiner", group: "Sternengruppe", initials: "SS", color: "#F59E0B", photoUrl: "/profiles/sofia.jpg", status: "expected", expectedArrival: "09:15", pickupOptions: ["Anna Steiner", "Paul Steiner"], notes: "Isst vegetarisch auf Wunsch der Eltern - beim Znüni und Mittagessen beachten.", allergies: "Kiwi", contacts: [contact("Anna Steiner", "Mutter", "+41 76 919 47 47", "parent-nora"), contact("Paul Steiner", "Vater", "+41 78 050 58 58", "parent-marc")], monthDays: 12, yearDays: 81 },
@@ -271,6 +270,8 @@ function ChildTableRow({ child, onOpenProfile }: { child: Child; onOpenProfile: 
 
 function ProfileView({ child, onBack, onCheckIn, onCheckOut, onMarkSick, onSaveNote }: { child: Child; onBack: () => void; onCheckIn: (id: string) => void; onCheckOut: (id: string, pickupBy: string) => void; onMarkSick: (id: string, reason: string) => void; onSaveNote: (id: string, note: string) => void }) {
   const [note, setNote] = React.useState(child.notes)
+  const pickupContacts = child.contacts.filter((contact) => contact.canPickup !== false)
+  const isPresent = child.status === "present"
   return (
     <section className="flex h-full min-h-0 flex-col gap-4">
       <div className="rounded-[28px] bg-[linear-gradient(135deg,var(--kita-blue),var(--kita-petrol))] p-5 text-white shadow-sm min-[1280px]:p-6">
@@ -303,18 +304,18 @@ function ProfileView({ child, onBack, onCheckIn, onCheckOut, onMarkSick, onSaveN
               </CardContent>
             </Card>
             <Card className="rounded-[20px] border-0 ring-1 ring-[var(--kita-fog)]">
-              <CardHeader><CardTitle>Aktionen</CardTitle><CardDescription>Ankunft, Krankheit und Abholung werden hier erfasst</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Aktionen</CardTitle><CardDescription>{isPresent ? "Abholung durch berechtigte Personen erfassen" : "Ankunft oder Krankmeldung erfassen"}</CardDescription></CardHeader>
               <CardContent className="grid gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={() => onCheckIn(child.id)}><UserCheck data-icon="inline-start" />Ankunft erfassen</Button>
-                  <Button variant="outline" onClick={() => onMarkSick(child.id, "Krank gemeldet")}><Thermometer data-icon="inline-start" />Krank melden</Button>
-                </div>
-                <div className="grid grid-cols-2 gap-2 min-[1180px]:grid-cols-4">
-                  {sickReasons.map((reason) => <Button key={reason} variant={child.sickReason === reason ? "secondary" : "outline"} onClick={() => onMarkSick(child.id, reason)}><Thermometer data-icon="inline-start" />{reason}</Button>)}
-                </div>
-                <div className="grid gap-2">
-                  {child.pickupOptions.map((person) => <Button key={person} variant="outline" onClick={() => onCheckOut(child.id, person)}><UserX data-icon="inline-start" />Abholung: {person}</Button>)}
-                </div>
+                {isPresent ? (
+                  <div className="grid gap-2">
+                    {pickupContacts.map((contact) => <Button key={contact.phone} variant="outline" onClick={() => onCheckOut(child.id, contact.name)}><UserX data-icon="inline-start" />Abholung: {contact.name}</Button>)}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button onClick={() => onCheckIn(child.id)}><UserCheck data-icon="inline-start" />Ankunft erfassen</Button>
+                    <Button variant="outline" onClick={() => onMarkSick(child.id, "Krank")}><Thermometer data-icon="inline-start" />Krank melden</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
