@@ -155,24 +155,14 @@
     color: #157b62;
   }
 
-  .status-expected {
-    background: color-mix(in oklab, var(--kita-sun) 28%, white);
-    color: #806316;
-  }
-
-  .status-gone {
-    background: color-mix(in oklab, var(--kita-lavender) 20%, white);
-    color: #6548c6;
-  }
-
-  .status-absent {
-    background: color-mix(in oklab, var(--kita-coral) 18%, white);
-    color: #b83f37;
-  }
-
   .status-sick {
     background: color-mix(in oklab, var(--kita-coral) 22%, white);
     color: #a93832;
+  }
+
+  .status-neutral {
+    background: color-mix(in oklab, var(--kita-fog) 72%, white);
+    color: #5d6f83;
   }
 
   .watermelon-layer {
@@ -434,57 +424,6 @@
   }
 
 
-  .sonar-notice {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    z-index: 120;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: min(560px, calc(100vw - 32px));
-    padding: 14px 18px;
-    border-radius: 24px;
-    background: rgb(255 255 255 / 97%);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 18px 60px rgb(15 23 42 / 25%), inset 0 0 0 1px rgb(255 255 255 / 60%);
-    transform: translateX(-50%);
-    animation: sonar-in 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
-  }
-
-  .sonar-ping {
-    position: relative;
-    display: grid;
-    flex-shrink: 0;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--kita-coral);
-    color: white;
-  }
-
-  .sonar-icon {
-    width: 26px;
-    height: 26px;
-  }
-
-  .sonar-ring {
-    position: absolute;
-    inset: 0;
-    border: 2px solid var(--kita-coral);
-    border-radius: 50%;
-    animation: sonar-ring 1.8s ease-out infinite;
-  }
-
-  .sonar-ring-2 {
-    animation-delay: 0.6s;
-  }
-
-  .sonar-ring-3 {
-    animation-delay: 1.2s;
-  }
-
   .watermelon-splash {
     position: fixed;
     inset: 0;
@@ -626,16 +565,6 @@
 
 @keyframes watermelon-face-in {
   to { opacity: 1; transform: translateZ(42px) scale(1); }
-}
-
-@keyframes sonar-ring {
-  0% { transform: scale(1); opacity: 0.85; }
-  100% { transform: scale(2.4); opacity: 0; }
-}
-
-@keyframes sonar-in {
-  0% { transform: translateX(-50%) translateY(-26px); opacity: 0; }
-  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 
 @keyframes splash-out {
